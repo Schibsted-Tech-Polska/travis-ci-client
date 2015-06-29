@@ -1,0 +1,43 @@
+{
+  "name": "schibsted-tech-polska/travis-ci-client",
+  "description": "Travis CI API client",
+  "version": "0.0.1",
+  "type": "library",
+  "keywords": ["travis", "api"],
+  "homepage": "https://github.com/Schibsted-Tech-Polska/travis-ci-client",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "STP Stavanger Aftenblad Team",
+      "email": "sa@schibsted.pl"
+    }
+  ],
+  "support": {
+    "email": "sa@schibsted.pl"
+  },
+  "require": {
+    "php": ">= 5.6.0",
+    "guzzle/guzzle": "3.9.*",
+    "psr/log": "1.0.*",
+    "symfony/console": "2.7.*"
+  },
+  "require-dev": {
+    "phpmd/phpmd": "2.2.*",
+    "sebastian/phpcpd": "2.0.*",
+    "squizlabs/php_codesniffer": "2.3.*",
+    "phploc/phploc": "2.1.*"
+  },
+  "autoload": {
+    "psr-4": {
+      "Stp\\TravisClient\\": "src/Stp/TravisClient"
+    }
+  },
+  "scripts": {
+    "post-install-cmd": [
+      "npm install"
+    ],
+    "post-update-cmd": [
+      "npm install"
+    ]
+  }
+}

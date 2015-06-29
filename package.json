@@ -1,0 +1,12 @@
+{
+  "name": "travis-ci-client",
+  "private": true,
+  "devDependencies": {
+    "grunt": "^0.4.5",
+    "grunt-cli": "^0.1.13",
+    "grunt-phpcpd": "^0.1.4",
+    "grunt-phpcs": "^0.4.0",
+    "grunt-phploc": "^0.1.3",
+    "grunt-phpmd": "^0.1.1"
+  }
+}
