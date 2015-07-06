@@ -48,9 +48,17 @@ class Client
         }
     }
 
-    public function getAccounts()
+    /**
+     * Returns accounts.
+     * @see http://docs.travis-ci.com/api/#accounts
+     *
+     * @param array $options
+     * @return array
+     */
+    public function getAccounts($options = [])
     {
-        $request = $this->client->get('accounts');
+        $paramsUrl = $this->prepareParametersUrl($options, ['all']);
+        $request = $this->client->get(sprintf('accounts%s', $paramsUrl));
         $response = $request->send();
 
         $result = [];
@@ -69,6 +77,13 @@ class Client
         return $result;
     }
 
+    /**
+     * Returns list of branches.
+     * @see http://docs.travis-ci.com/api/#branches
+     *
+     * @param string $repository
+     * @return array
+     */
     public function getBranches($repository)
     {
         $request = $this->client->get(sprintf('repos/%s/branches', $repository));
@@ -99,6 +114,14 @@ class Client
         return $result;
     }
 
+    /**
+     * Returns branch.
+     * @see http://docs.travis-ci.com/api/#branches
+     *
+     * @param string $repository
+     * @param string $branch
+     * @return null|Branch
+     */
     public function getBranch($repository, $branch)
     {
         $request = $this->client->get(sprintf('repos/%s/branches/%s', $repository, $branch));
@@ -122,9 +145,19 @@ class Client
         return null;
     }
 
-    public function getBuilds($repository)
+    /**
+     * Returns list of builds
+     * @see http://docs.travis-ci.com/api/#builds
+     *
+     * @param string $repository
+     * @param array $options
+     * @return array
+     */
+    public function getBuilds($repository, $options = [])
     {
-        $request = $this->client->get(sprintf('repos/%s/builds', $repository));
+        $paramsUrl = $this->prepareParametersUrl($options, ['number', 'after_number', 'event_type']);
+
+        $request = $this->client->get(sprintf('repos/%s/builds%s', $repository, $paramsUrl));
         $response = $request->send();
 
         $result = [];
@@ -150,5 +183,30 @@ class Client
         }
 
         return $result;
+    }
+
+    /**
+     * Prepares params url that can be appended to request.
+     *
+     * @param array $params
+     * @param array $allowedParams
+     * @return string
+     */
+    private function prepareParametersUrl(array $params, array $allowedParams)
+    {
+        $allowedParams = array_flip($allowedParams);
+        $params = array_intersect_key($params, $allowedParams);
+
+        $paramsUrlItems = [];
+        foreach ($params as $key => $param) {
+            $paramsUrlItems = $key . '=' . urlencode($param);
+        }
+
+        $paramsUrl = join('&', $paramsUrlItems);
+        if (strlen($paramsUrl) > 0) {
+            $paramsUrl = '?' . $paramsUrl;
+        }
+
+        return $paramsUrl;
     }
 }
