@@ -199,7 +199,7 @@ class Client
 
         $paramsUrlItems = [];
         foreach ($params as $key => $param) {
-            $paramsUrlItems = $key . '=' . urlencode($param);
+            $paramsUrlItems[] = $key . '=' . urlencode($param);
         }
 
         $paramsUrl = join('&', $paramsUrlItems);

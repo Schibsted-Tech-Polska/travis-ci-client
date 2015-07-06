@@ -1,7 +1,7 @@
 {
   "name": "schibsted-tech-polska/travis-ci-client",
   "description": "Travis CI API client",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "type": "library",
   "keywords": ["travis", "api"],
   "homepage": "https://github.com/Schibsted-Tech-Polska/travis-ci-client",
