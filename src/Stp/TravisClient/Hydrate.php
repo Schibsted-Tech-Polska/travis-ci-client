@@ -4,7 +4,7 @@ namespace Stp\TravisClient;
 
 trait Hydrate
 {
-    public function hydrate($data, $object)
+    public static function hydrate($data, $object)
     {
         foreach ($data as $key => $value) {
             $methodName = explode('_', $key);
