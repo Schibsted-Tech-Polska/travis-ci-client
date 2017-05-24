@@ -3,6 +3,8 @@
 namespace Stp\TravisClient;
 
 use Guzzle\Http\Client as GuzzleClient;
+use Guzzle\Http\Exception\ClientErrorResponseException;
+use Guzzle\Http\Message\Response;
 use Stp\TravisClient\Entities\Account;
 use Stp\TravisClient\Entities\Branch;
 use Stp\TravisClient\Entities\Build;
@@ -10,41 +12,42 @@ use Stp\TravisClient\Entities\Commit;
 
 class Client
 {
+    const USER_AGENT = 'STP Travis API Client';
+
     protected $apiUrl = 'https://api.travis-ci.org';
-    protected $githubToken;
-    protected $token;
+
     protected $client;
 
-    /**
-     * Client constructor.
-     * @param string $githubToken
-     * @param string $apiUrl
-     */
-    public function __construct($githubToken, $apiUrl = null)
+    protected $tokenLoader;
+
+    public function __construct(TokenLoaderInterface $tokenLoader, $apiUrl = null)
     {
         if ($apiUrl) {
             $this->apiUrl = $apiUrl;
         }
-        $this->githubToken = $githubToken;
+
+        $this->tokenLoader = $tokenLoader;
+
         $this->client = new GuzzleClient();
         $this->client->setBaseUrl($this->apiUrl);
         $this->client->setDefaultOption('headers/Content-Type', 'application/json');
         $this->client->setDefaultOption('headers/Accept', 'application/vnd.travis-ci.2+json');
+        $this->client->setUserAgent(self::USER_AGENT);
 
-        $this->githubAuth($githubToken);
-
-        $this->client->setDefaultOption('headers/Authorization', sprintf('token %s', $this->token));
+        $this->loadToken();
     }
 
-    private function githubAuth($githubToken)
+    private function loadToken()
     {
-        $request = $this->client->post('auth/github');
-        $request->setBody(sprintf('{"github_token": "%s"}', $githubToken));
-        $response = $request->send();
+        try {
+            $token = $this->tokenLoader->load($this->client);
+            $this->client->setDefaultOption('headers/Authorization', sprintf('token %s', $token));
+        } catch (ClientErrorResponseException $e) {
+            if ($e->getCode() == 403) {
+                $this->tokenLoader->reload($this->client);
+            }
 
-        if ($response->getStatusCode() == 200) {
-            $responseJson = $response->json();
-            $this->token = $responseJson['access_token'];
+            throw $e;
         }
     }
 
@@ -58,8 +61,7 @@ class Client
     public function getAccounts($options = [])
     {
         $paramsUrl = $this->prepareParametersUrl($options, ['all']);
-        $request = $this->client->get(sprintf('accounts%s', $paramsUrl));
-        $response = $request->send();
+        $response = $this->sendRequest(sprintf('accounts%s', $paramsUrl));
 
         $result = [];
 
@@ -77,6 +79,12 @@ class Client
         return $result;
     }
 
+    private function sendRequest(string $uri): Response
+    {
+        $request = $this->client->get($uri);
+        return $request->send();
+    }
+
     /**
      * Returns list of branches.
      * @see http://docs.travis-ci.com/api/#branches
@@ -86,8 +94,7 @@ class Client
      */
     public function getBranches($repository)
     {
-        $request = $this->client->get(sprintf('repos/%s/branches', $repository));
-        $response = $request->send();
+        $response = $this->sendRequest(sprintf('repos/%s/branches', $repository));
 
         $result = [];
 
@@ -124,8 +131,7 @@ class Client
      */
     public function getBranch($repository, $branch)
     {
-        $request = $this->client->get(sprintf('repos/%s/branches/%s', $repository, $branch));
-        $response = $request->send();
+        $response = $this->sendRequest(sprintf('repos/%s/branches/%s', $repository, $branch));
 
         if ($response->getStatusCode() == 200) {
             $responseJson = $response->json();
@@ -156,9 +162,7 @@ class Client
     public function getBuilds($repository, $options = [])
     {
         $paramsUrl = $this->prepareParametersUrl($options, ['number', 'after_number', 'event_type']);
-
-        $request = $this->client->get(sprintf('repos/%s/builds%s', $repository, $paramsUrl));
-        $response = $request->send();
+        $response = $this->sendRequest(sprintf('repos/%s/builds%s', $repository, $paramsUrl));
 
         $result = [];
 
