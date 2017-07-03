@@ -12,6 +12,8 @@ use Stp\TravisClient\Entities\Commit;
 
 class Client
 {
+    const DEFAULT_TIMEOUT = 10; // in seconds
+
     const USER_AGENT = 'STP Travis API Client';
 
     protected $apiUrl = 'https://api.travis-ci.org';
@@ -20,16 +22,18 @@ class Client
 
     protected $tokenLoader;
 
-    public function __construct(TokenLoaderInterface $tokenLoader, $apiUrl = null)
-    {
+    public function __construct(
+        TokenLoaderInterface $tokenLoader,
+        ?string $apiUrl = null,
+        float $timeout = self::DEFAULT_TIMEOUT
+    ) {
         if ($apiUrl) {
             $this->apiUrl = $apiUrl;
         }
 
         $this->tokenLoader = $tokenLoader;
 
-        $this->client = new GuzzleClient();
-        $this->client->setBaseUrl($this->apiUrl);
+        $this->client = new GuzzleClient($this->apiUrl, ['timeout' => $timeout]);
         $this->client->setDefaultOption('headers/Content-Type', 'application/json');
         $this->client->setDefaultOption('headers/Accept', 'application/vnd.travis-ci.2+json');
         $this->client->setUserAgent(self::USER_AGENT);
